@@ -20,33 +20,44 @@
 .global main
 .func main
 
-modulus:
-    mov r7, r0
+mod:
+    mov r2, r0
+    ldr r0, =mod_func
+    bl printf
     _loop:
-        cmp r7, #0
+        cmp r2, #0
         blt _end_loop
-        sub r7, r7, r1
-        cmp r7, #0
+        sub r2, r2, r1
+        cmp r2, #0
         blt _loop
-        mov r0, r7
+        mov r0, r2
         b _loop
         _end_loop:
+            mov r4,r0
+            ldr r0, =mod_func_leave
+            bl printf
+            mov r0, r4
             bx lr
 
 get_d:
+    ldr r0, =hello_d
+    bl printf
     mov r4, #1
     ldr r3, addr_e
     ldr r3, [r3]
 
-    ldr r2, addr_phi
-    ldr r2, [r2]
+    ldr r7, addr_phi
+    ldr r7, [r7]
 
     @ r3 = e, r2 = phi
     d_loop:
+        ldr r0, =enter_loop
+        bl printf
         mul r5, r4, r3
         mov r0, r5
-        mov r1, r2
-        bl modulus
+        mov r1, r7
+        bl mod @ r0 <- r5 % r2
+        @ b _exit
         cmp r0, #1
         beq done_d
         add r4, r4, #1
@@ -90,8 +101,6 @@ get_e:
         mov r0, r3
         mov r1, r5
    
-        @ ldr r7, =lr_bu_2
-        @ str lr, [r7]
         bl gcd
         mov r6, r0 @ r6 = gcd(i, phi)
 
@@ -216,6 +225,10 @@ main:
     ldr r1, [r1]
     bl printf
 
+    ldr r7, addr_lr_bu
+    str lr, [r7]
+    bl get_d
+
     @ print d
     ldr r0, =string_d
     ldr r1, addr_d
@@ -238,7 +251,7 @@ addr_lr_bu: .word lr_bu
 addr_lr_bu_2: .word lr_bu_2
 
 done: .asciz "Done with e\n"
-shit: .asciz "shit: %d %d\n"
+shit: .asciz "shit: %d\n"
 string_welcome: .asciz "Rivest-Shamir-Adleman: \n"
 string_modulus: .asciz "The modulus is: %d\n"
 string_check_p_q: .asciz "Hue hue: %d %d\n"
@@ -250,7 +263,7 @@ string_d: .asciz "d = %d\n"
 string_shit: .asciz "shit: %d\n"
 string_shit_2: .asciz "shit again cacaia: %d %d\n"
 string_waiting: .asciz "Calculating e...\n"
-string_fututi: .asciz "De ce pizda ma-ti nu vrei sa mergi? r0 = %d, r1 = %d\n"
+string_fututi: .asciz "De ce pizda ma-tii nu vrei sa mergi? r0 = %d, r1 = %d\n"
 string_fututi_2: .asciz "TEST IN PULA MEA? r0 = %d, r1 = %d\n"
 string_gcd: .asciz "r0 = %d and r1 = %d\n"
 string_finished_loop: .asciz "Finished calculating e\n"
@@ -260,3 +273,7 @@ string_inside_gcd: .asciz "Inside gcd: r0 = %d, r1 = %d\n"
 string_inside_e: .asciz "phi = %d, n = %d\n"
 done_it_1: .asciz "Done it 1\n"
 done_it_2: .asciz "Done it 2\n"
+mod_func: .asciz "Hello modulus\n"
+mod_func_leave: .asciz "Bye modulus\n"
+hello_d: .asciz "Hello d\n"
+enter_loop: .asciz "hello loop\n"
