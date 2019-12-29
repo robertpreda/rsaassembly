@@ -10,3 +10,8 @@ tut2
 tutorial2.o
 tutorial2.s
 rsa.o
+utils.s
+test.s
+test.o
+test
+utils
