@@ -28,18 +28,22 @@
 
 encrypt:
     @ input to encrypt: r0
+    @ mov r9, r0
     ldr r1, addr_e
     ldr r1, [r1] @ r1 = e
     ldr r2, addr_n
     ldr r2, [r2] @ r2 = n
-    mov r3, #1
-    mul_loop:
-        cmp r3, r1
-        beq end_mul
 
-        mul r8, r0, r0
-        add r3, #1
-        b mul_loop
+    mov r3, #0
+    mov r8, #1
+    mul_loop:
+      
+
+       mul r8, r0, r8
+       add r3, #1
+       cmp r3, r1
+       beq end_mul
+       b mul_loop
 
     end_mul:
         mov r0, r8
@@ -48,6 +52,9 @@ encrypt:
         str lr, [r10]
         bl mod
 
+        ldr r1, addr_encr_input
+        str r0, [r1]
+
 decrypt:
     ldr r1, addr_d
     ldr r1, [r1]
@@ -55,13 +62,15 @@ decrypt:
     ldr r2, addr_n
     ldr r2, [r2]
 
-    mov r3, #1
+    mov r3, #0
+    mov r8, #1
     mul_loop_d:
+        
+
+        mul r8, r0, r8
+        add r3, #1
         cmp r3, r1
         beq end_mul_d
-
-        mul r8, r0, r0
-        add r3, #1
         b mul_loop_d
 
     end_mul_d:
@@ -70,6 +79,9 @@ decrypt:
         ldr r10, addr_lr_bu_2
         str lr, [r10]
         bl mod
+
+        ldr r1, addr_decr_output
+        str r0, [r1]
 
 
 
@@ -345,8 +357,8 @@ main:
 
    bl decrypt
 
-   ldr r1, addr_decr_output
-   str r0, [r1]
+   ldr r2, addr_decr_output
+   str r0, [r2]
 
    ldr r0, =string_decrpyted
    ldr r1, addr_decr_output
@@ -384,8 +396,8 @@ string_d: .asciz "d = %d\n"
 string_shit: .asciz "shit: %d\n"
 string_shit_2: .asciz "shit again cacaia: %d %d\n"
 string_waiting: .asciz "Calculating e...\n"
-string_fututi: .asciz "De ce pizda ma-tii nu vrei sa mergi? r0 = %d, r1 = %d\n"
-string_fututi_2: .asciz "TEST IN PULA MEA? r0 = %d, r1 = %d\n"
+string_pls_work: .asciz "Pls work? r0 = %d, r1 = %d\n"
+string_pls_work_2: .asciz "Pls work 2? r0 = %d, r1 = %d\n"
 string_gcd: .asciz "r0 = %d and r1 = %d\n"
 string_finished_loop: .asciz "Finished calculating e\n"
 string_fmt: .asciz "%d"
