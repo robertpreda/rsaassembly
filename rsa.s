@@ -21,9 +21,7 @@
 .func main
 
 mod:
-    mov r2, r0
-    ldr r0, =mod_func
-    bl printf
+
     _loop:
         cmp r2, #0
         blt _end_loop
@@ -37,34 +35,43 @@ mod:
             ldr r0, =mod_func_leave
             bl printf
             mov r0, r4
+
+            ldr r10, addr_lr_bu
+            ldr lr, [r10]
             bx lr
 
 get_d:
-    ldr r0, =hello_d
-    bl printf
-    mov r4, #1
+    
     ldr r3, addr_e
     ldr r3, [r3]
 
-    ldr r7, addr_phi
-    ldr r7, [r7]
+    ldr r4, addr_phi
+    ldr r4, [r4]
 
-    @ r3 = e, r2 = phi
+    mov r5, #1
+
+
+
+    @ r3 = e, r4 = phi
     d_loop:
-        ldr r0, =enter_loop
+        ldr r0, =string_fmt
+        mov r1, r5
+        mov r6, r5
         bl printf
-        mul r5, r4, r3
-        mov r0, r5
-        mov r1, r7
-        bl mod @ r0 <- r5 % r2
-        @ b _exit
+        mov r5, r6
+        mul r0, r3, r5
+        mov r1, r4
+        bl mod
+
         cmp r0, #1
         beq done_d
-        add r4, r4, #1
+        add r5, r5, #1
         b d_loop
+
+        
     done_d:
         ldr r6, addr_d
-        str r4, [r6]
+        str r5, [r6]
         bx lr
 
 
@@ -152,11 +159,6 @@ main:
     ldr r0, =string_fmt
     ldr r1, addr_q
     bl scanf @ calls scanf(r0, r1), returns the value read through r1s
-
-    ldr r0, =string_shit
-    ldr r1, addr_q
-    ldr r1, [r1]
-    bl printf
 
     @ print value of q
     ldr r0, =string_q
@@ -260,20 +262,21 @@ string_q: .asciz "q = %d\n"
 string_phi: .asciz "phi = %d\n"
 string_e: .asciz "e = %d\n"
 string_d: .asciz "d = %d\n"
-string_shit: .asciz "shit: %d\n"
 string_shit_2: .asciz "shit again cacaia: %d %d\n"
 string_waiting: .asciz "Calculating e...\n"
 string_fututi: .asciz "De ce pizda ma-tii nu vrei sa mergi? r0 = %d, r1 = %d\n"
 string_fututi_2: .asciz "TEST IN PULA MEA? r0 = %d, r1 = %d\n"
 string_gcd: .asciz "r0 = %d and r1 = %d\n"
 string_finished_loop: .asciz "Finished calculating e\n"
-string_fmt: .asciz "%d"
+string_fmt: .asciz "Ceva numar: %d\n"
 string_mul_fmt: .asciz "%d x %d = %d\n"
 string_inside_gcd: .asciz "Inside gcd: r0 = %d, r1 = %d\n"
 string_inside_e: .asciz "phi = %d, n = %d\n"
 done_it_1: .asciz "Done it 1\n"
 done_it_2: .asciz "Done it 2\n"
-mod_func: .asciz "Hello modulus\n"
+mod_func: .asciz "Hello modulus: %d %d\n"
 mod_func_leave: .asciz "Bye modulus\n"
-hello_d: .asciz "Hello d\n"
-enter_loop: .asciz "hello loop\n"
+hello_d: .asciz "Hello d: %d %d\n"
+enter_loop: .asciz "hello loop: %d %d\n"
+exit_loop: .asciz "Modulus: %d\n"
+string_inside_d_loop: .asciz "%d %d\n"
