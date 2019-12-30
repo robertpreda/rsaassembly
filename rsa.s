@@ -15,13 +15,67 @@
         lr_bu: .word 0
     .balign 4
         lr_bu_2: .word 0
+    .balign 4
+        input: .word 0
+    .balign 4
+        encrypted_input: .word 0
+    .balign 4
+        decrypted_ouput: .word 0
 
 
 .global main
 .func main
 
-mod:
+encrypt:
+    @ input to encrypt: r0
+    ldr r1, addr_e
+    ldr r1, [r1] @ r1 = e
+    ldr r2, addr_n
+    ldr r2, [r2] @ r2 = n
+    mov r3, #1
+    mul_loop:
+        cmp r3, r1
+        beq end_mul
 
+        mul r8, r0, r0
+        add r3, #1
+        b mul_loop
+
+    end_mul:
+        mov r0, r8
+        mov r1, r2
+        ldr r10, addr_lr_bu_2
+        str lr, [r10]
+        bl mod
+
+decrypt:
+    ldr r1, addr_d
+    ldr r1, [r1]
+
+    ldr r2, addr_n
+    ldr r2, [r2]
+
+    mov r3, #1
+    mul_loop_d:
+        cmp r3, r1
+        beq end_mul_d
+
+        mul r8, r0, r0
+        add r3, #1
+        b mul_loop_d
+
+    end_mul_d:
+        mov r0, r8
+        mov r1, r2
+        ldr r10, addr_lr_bu_2
+        str lr, [r10]
+        bl mod
+
+
+
+
+mod:
+    mov r2, r0
     _loop:
         cmp r2, #0
         blt _end_loop
@@ -31,47 +85,44 @@ mod:
         mov r0, r2
         b _loop
         _end_loop:
-            mov r4,r0
-            ldr r0, =mod_func_leave
-            bl printf
-            mov r0, r4
-
-            ldr r10, addr_lr_bu
-            ldr lr, [r10]
+            ldr r9, addr_lr_bu_2
+            ldr lr, [r9]
             bx lr
 
 get_d:
-    
     ldr r3, addr_e
     ldr r3, [r3]
 
-    ldr r4, addr_phi
-    ldr r4, [r4]
+    ldr r2, addr_phi
+    ldr r2, [r2]
 
-    mov r5, #1
-
-
-
-    @ r3 = e, r4 = phi
+    mov r4, #1
+    @ r3 = e, r2 = phi
     d_loop:
-        ldr r0, =string_fmt
-        mov r1, r5
-        mov r6, r5
-        bl printf
-        mov r5, r6
-        mul r0, r3, r5
-        mov r1, r4
+        mul r0, r3, r4
+        mov r1, r2
+
+        ldr r9, addr_lr_bu_2
+        str lr, [r9]
         bl mod
 
+        mov r1, r0
+        mov r10, r1
+        ldr r0, =string_fmt
+        bl printf
+
+        mov r0, r10
         cmp r0, #1
         beq done_d
-        add r5, r5, #1
+        add r4, r4, #1
         b d_loop
 
         
     done_d:
-        ldr r6, addr_d
-        str r5, [r6]
+
+
+        @ ldr r10, addr_lr_bu
+        @ ldr lr, [r10]
         bx lr
 
 
@@ -160,6 +211,11 @@ main:
     ldr r1, addr_q
     bl scanf @ calls scanf(r0, r1), returns the value read through r1s
 
+    ldr r0, =string_shit
+    ldr r1, addr_q
+    ldr r1, [r1]
+    bl printf
+
     @ print value of q
     ldr r0, =string_q
     ldr r1, addr_q
@@ -227,15 +283,75 @@ main:
     ldr r1, [r1]
     bl printf
 
-    ldr r7, addr_lr_bu
-    str lr, [r7]
+    @ ldr r10, addr_lr_bu
+    @ str lr, [r10]
     bl get_d
 
-    @ print d
+    mov r7, r0
+
+    mov r1, r0
     ldr r0, =string_d
+    bl printf
+
+    @ store d
+    @ r0 = d
     ldr r1, addr_d
+    str r7, [r1]
+
+    ldr r0, =string_d
+    ldr r4, addr_d
+    ldr r4, [r4]
+    mov r1, r4
+    bl printf
+
+
+    @ encryption and decryption demo. 
+    @ user will enter a number (just for POC, the software will output the encrypted number, decrypt, and then output the decryption)
+    ldr r0, =string_instructions
+    bl printf
+
+    ldr r0, =string_fmt
+    ldr r1, addr_input
+    bl scanf
+
+    @ print input data
+    ldr r0, =string_input
+    ldr r1, addr_input
     ldr r1, [r1]
     bl printf
+
+    @ encryption
+    @ c = input ^ e mod n
+
+    ldr r0, addr_input
+    ldr r0, [r0]
+
+    bl encrypt
+
+    ldr r1, addr_encr_input
+    str r0, [r1]
+
+
+    ldr r0, =string_encrypted
+    ldr r1, addr_encr_input
+    ldr r1, [r1]
+    bl printf
+
+    @ decryption
+    @ decr = c ^ d mod n
+
+   ldr r0, addr_encr_input
+   ldr r0, [r0]
+
+   bl decrypt
+
+   ldr r1, addr_decr_output
+   str r0, [r1]
+
+   ldr r0, =string_decrpyted
+   ldr r1, addr_decr_output
+   ldr r1, [r1]
+   bl printf
 
 
 _exit:
@@ -251,6 +367,9 @@ addr_d :   .word d
 addr_phi:  .word phi
 addr_lr_bu: .word lr_bu
 addr_lr_bu_2: .word lr_bu_2
+addr_input: .word input
+addr_encr_input: .word encrypted_input
+addr_decr_output: .word decrypted_ouput
 
 done: .asciz "Done with e\n"
 shit: .asciz "shit: %d\n"
@@ -262,21 +381,24 @@ string_q: .asciz "q = %d\n"
 string_phi: .asciz "phi = %d\n"
 string_e: .asciz "e = %d\n"
 string_d: .asciz "d = %d\n"
+string_shit: .asciz "shit: %d\n"
 string_shit_2: .asciz "shit again cacaia: %d %d\n"
 string_waiting: .asciz "Calculating e...\n"
 string_fututi: .asciz "De ce pizda ma-tii nu vrei sa mergi? r0 = %d, r1 = %d\n"
 string_fututi_2: .asciz "TEST IN PULA MEA? r0 = %d, r1 = %d\n"
 string_gcd: .asciz "r0 = %d and r1 = %d\n"
 string_finished_loop: .asciz "Finished calculating e\n"
-string_fmt: .asciz "Ceva numar: %d\n"
+string_fmt: .asciz "%d"
 string_mul_fmt: .asciz "%d x %d = %d\n"
 string_inside_gcd: .asciz "Inside gcd: r0 = %d, r1 = %d\n"
 string_inside_e: .asciz "phi = %d, n = %d\n"
 done_it_1: .asciz "Done it 1\n"
 done_it_2: .asciz "Done it 2\n"
-mod_func: .asciz "Hello modulus: %d %d\n"
+mod_func: .asciz "Hello modulus\n"
 mod_func_leave: .asciz "Bye modulus\n"
-hello_d: .asciz "Hello d: %d %d\n"
-enter_loop: .asciz "hello loop: %d %d\n"
-exit_loop: .asciz "Modulus: %d\n"
-string_inside_d_loop: .asciz "%d %d\n"
+hello_d: .asciz "Hello d\n"
+enter_loop: .asciz "hello loop\n"
+string_instructions: .asciz "Enter a number: \n"
+string_input: .asciz "Input is: %d\n"
+string_encrypted: .asciz "Encrypted input: %d\n"
+string_decrpyted: .asciz "Decrypted: %d\n"
